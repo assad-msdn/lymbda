@@ -45,3 +45,96 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
     }]
   }
 }
+
+
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2021-03-15' = {
+  name: '${prefix}-cosmo-account'
+  location: location
+  kind: 'GlobalDocumentDB'
+  properties: {
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+    }
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+      }
+    ]
+    databaseAccountOfferType: 'Standard'
+    enableAutomaticFailover: false
+    capabilities: [
+      {
+        name: 'EnableServerless'
+      }
+    ]
+  }
+}
+
+resource sqlDb 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-06-15' = {
+  name: '${prefix}-sqldb'
+  parent: cosmosDbAccount
+  properties: {
+    resource: {
+      id: '${prefix}-sqldb'
+    }
+    options: {
+    }
+  }
+}
+
+
+resource sqlContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-06-15' = {
+  parent: sqlDb 
+  name: '${prefix}-orders'
+  properties: {
+    resource: {
+      id: '${prefix}-orders'
+      partitionKey: {
+        paths: [
+          '/id'
+        ]
+      }
+    }
+    options: {}
+  }
+}
+
+resource cosmoPrivateDns 'Microsoft.Network/privateDnsZones@2020-06-01'={
+  name: 'privatelink.documents.azure.com'
+  location: 'global'
+}
+
+resource cosmoPrivateDnsNetworkLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01'= {
+  name: '${prefix}-cosmo-dns-link'
+  location: 'global'
+  parent: cosmoPrivateDns
+  properties: {
+   registrationEnabled: false
+   virtualNetwork: {
+    id:virtualNetwork.id
+   } 
+  }
+}
+
+
+resource cosmoPrivateEndPoint 'Microsoft.Network/privateEndpoints@2022-01-01' = {
+  name: '${prefix}-cosmo-pe'
+  location: location
+  properties: {
+    privateLinkServiceConnections: [
+      {
+        name: '${prefix}-cosmo-pe'
+        properties: {
+          privateLinkServiceId: cosmosDbAccount.id
+          groupIds: [
+            'SQL'
+          ]
+        }
+      }
+    ]
+    subnet: {
+      id: virtualNetwork.properties.subnets[0].id
+    }
+  }
+}
