@@ -5,12 +5,20 @@ param prefix string
 
 param vnetSettings object = {
   addressPrefixes: [
-    '10.0.0.0/20'
+    '10.0.0.0/19'
   ]
   subnets: [
     {
       name: 'subnet1'
-      addressPrefixes: '10.0.0.0/22'
+      addressPrefixes: '10.0.0.0/21'
+    }
+    {
+      name: 'acaAppSubnet'
+      addressPrefixes: '10.0.8.0/21'
+    }
+    {
+      name: 'acaControlplaneSubnet'
+      addressPrefixes: '10.0.16.0/21'
     }
   ]
 }
@@ -136,5 +144,55 @@ resource cosmoPrivateEndPoint 'Microsoft.Network/privateEndpoints@2022-01-01' = 
     subnet: {
       id: virtualNetwork.properties.subnets[0].id
     }
+  }
+}
+
+resource cosmosPrivateEnspointDnsLink 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-05-01'= {
+  name: '${prefix}-cosmo-pe-dns'
+  parent:cosmoPrivateEndPoint
+  properties: {
+   privateDnsZoneConfigs: [
+      {
+       name: 'privatelink.documents.azure.com'
+       properties: {
+        privateDnsZoneId: cosmoPrivateDns.id
+       } 
+      }
+   ] 
+  }
+}
+
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = {
+  name: '${replace(prefix, '-','')}acr'
+  location: location
+  sku: {
+    name: 'Basic'
+  }
+  properties: {
+    adminUserEnabled: true
+  }
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
+  name: 'assadkvmsdn01'
+  location: location
+  properties: {
+    enabledForDeployment: true
+    enabledForTemplateDeployment: true
+    enabledForDiskEncryption: true
+    enableRbacAuthorization: true
+    tenantId: tenant().tenantId
+        sku: {
+      name: 'standard'
+      family: 'A'
+    }
+  }
+}
+
+
+resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
+  name: '${keyVault.name}/acrAdminPassword'
+  properties: {
+    value: containerRegistry.listCredentials().passwords[0].value
   }
 }
