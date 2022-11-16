@@ -26,7 +26,7 @@ resource env 'Microsoft.Web/kubeEnvironments@2022-03-01'= {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
         customerId: logAnalyticsWorkspace.properties.customerId
-        sharedKey: logAnalyticsWorkspace.listkeys().primerySharedKey
+        sharedKey: logAnalyticsWorkspace.listkeys().primarySharedKey
 
       }
     }
