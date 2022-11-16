@@ -2,7 +2,7 @@
 param location string
 // param storageAccountName string = 'msdnsa${uniqueString(resourceGroup().id)}'
 param prefix string
-param vNetid string
+param vnetid string
 
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020-10-01' = {
@@ -10,7 +10,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020-10
   location: location
   properties: {
     sku: {
-      name: 'Standard'
+      name: 'pergb2018'
     }
   }
 }
@@ -31,8 +31,8 @@ resource env 'Microsoft.Web/kubeEnvironments@2022-03-01'= {
       }
     }
     containerAppsConfiguration: {
-      appSubnetResourceId: '${vNetid}/subnets/acaAppSubnet'
-      controlPlaneSubnetResourceId: '${vNetid}/subnets/acaControlPlaneSubnet'
+      appSubnetResourceId: '${vnetid}/subnets/acaAppSubnet'
+      controlPlaneSubnetResourceId: '${vnetid}/subnets/acaControlPlaneSubnet'
     }
   }
 }
