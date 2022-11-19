@@ -108,6 +108,24 @@ resource sqlContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
   }
 }
 
+resource stateContainerName 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-08-15' = {
+  parent: sqlDb
+  name: '${prefix}-state'
+  properties: {
+    resource: {
+      id:  '${prefix}-state'
+       partitionKey:{
+        paths:[
+         '/partitionkey'
+        ]
+       }
+    }
+    options:{
+      
+    }
+  }
+}
+
 resource cosmoPrivateDns 'Microsoft.Network/privateDnsZones@2020-06-01'={
   name: 'privatelink.documents.azure.com'
   location: 'global'
