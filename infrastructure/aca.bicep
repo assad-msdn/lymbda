@@ -15,7 +15,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020-10
   }
 }
 
-resource env 'Microsoft.Web/kubeEnvironments@2022-03-01'= {
+resource env 'Microsoft.App/managedEnvironments@2022-06-01-preview'= {
   name: '${prefix}-container-env'
   location: location
   kind: 'containerenvironment'
